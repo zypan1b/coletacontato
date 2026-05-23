@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Leads · envioEVO{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-2xl font-bold">Leads <span class="text-slate-400 text-base font-normal">({{ leads|length }}/{{ total }})</span></h1>
+  <div class="flex gap-2">
+    <a href="{{ url_for('export_csv') }}?{{ request.query_string.decode() }}" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-sm">⬇ CSV</a>
+    <a href="{{ url_for('export_json') }}?{{ request.query_string.decode() }}" class="bg-slate-600 hover:bg-slate-700 text-white px-3 py-1.5 rounded text-sm">⬇ JSON</a>
+  </div>
+</div>
+
+<form method="GET" class="bg-white p-3 rounded-lg shadow-sm border mb-4 grid grid-cols-1 md:grid-cols-5 gap-2">
+  <input type="text" name="q" value="{{ filters.q }}" placeholder="Buscar nome/telefone/site..." class="px-2 py-1.5 border rounded text-sm">
+  <select name="category" class="px-2 py-1.5 border rounded text-sm">
+    <option value="">Todas categorias</option>
+    {% for c in categories %}
+      <option value="{{ c }}" {% if filters.category == c %}selected{% endif %}>{{ c }}</option>
+    {% endfor %}
+  </select>
+  <select name="city" class="px-2 py-1.5 border rounded text-sm">
+    <option value="">Todas cidades</option>
+    {% for c in cities %}
+      <option value="{{ c }}" {% if filters.city == c %}selected{% endif %}>{{ c }}</option>
+    {% endfor %}
+  </select>
+  <select name="status" class="px-2 py-1.5 border rounded text-sm">
+    <option value="">Todos status</option>
+    <option value="pending" {% if filters.status == "pending" %}selected{% endif %}>Pendente</option>
+    <option value="sent" {% if filters.status == "sent" %}selected{% endif %}>Enviado</option>
+    <option value="dry-run" {% if filters.status == "dry-run" %}selected{% endif %}>Dry-run</option>
+    <option value="fail" {% if filters.status == "fail" %}selected{% endif %}>Falha</option>
+    <option value="blacklist" {% if filters.status == "blacklist" %}selected{% endif %}>Blacklist</option>
+  </select>
+  <button class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded text-sm">Filtrar</button>
+</form>
+
+<div class="bg-white rounded-lg shadow-sm border overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-slate-100 text-slate-600 text-xs uppercase">
+      <tr>
+        <th class="text-left p-2">Status</th>
+        <th class="text-left p-2">Nome</th>
+        <th class="text-left p-2">Telefone</th>
+        <th class="text-left p-2">Categoria</th>
+        <th class="text-left p-2">Endereço</th>
+        <th class="text-left p-2">Web</th>
+        <th class="text-left p-2">Ação</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in leads %}
+      <tr class="border-t hover:bg-slate-50">
+        <td class="p-2">
+          {% if l._status == "sent" %}
+            <span class="inline-block px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800">enviado</span>
+          {% elif l._status == "fail" %}
+            <span class="inline-block px-2 py-0.5 rounded text-xs bg-rose-100 text-rose-800">falha</span>
+          {% elif l._status == "dry-run" %}
+            <span class="inline-block px-2 py-0.5 rounded text-xs bg-sky-100 text-sky-800">dry-run</span>
+          {% elif l._status == "blacklist" %}
+            <span class="inline-block px-2 py-0.5 rounded text-xs bg-slate-200 text-slate-700">blacklist</span>
+          {% else %}
+            <span class="inline-block px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800">pendente</span>
+          {% endif %}
+        </td>
+        <td class="p-2 font-medium">{{ l.nome }}</td>
+        <td class="p-2 font-mono text-xs">{{ l.phone }}</td>
+        <td class="p-2 text-xs text-slate-600">{{ l.category }}</td>
+        <td class="p-2 text-xs text-slate-600">{{ l.address }}</td>
+        <td class="p-2 text-xs">
+          {% if l.website %}<a href="{{ l.website }}" target="_blank" class="text-sky-600 hover:underline">link</a>{% endif %}
+        </td>
+        <td class="p-2">
+          {% if l._status == "blacklist" %}
+            <form method="POST" action="{{ url_for('blacklist_remove') }}">
+              <input type="hidden" name="phone" value="{{ l.phone }}">
+              <button class="text-xs text-emerald-700 hover:underline">remover</button>
+            </form>
+          {% else %}
+            <form method="POST" action="{{ url_for('blacklist_add') }}" onsubmit="return confirm('Adicionar à blacklist?')">
+              <input type="hidden" name="phone" value="{{ l.phone }}">
+              <button class="text-xs text-rose-600 hover:underline">⊘ blacklist</button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="p-8 text-center text-slate-400">Nenhum lead.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

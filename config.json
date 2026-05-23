@@ -1,0 +1,33 @@
+{
+  "scrape": {
+    "search_terms": [
+      "barbearia",
+      "salão de beleza",
+      "estúdio de nail design",
+      "cílios",
+      "clínica de estética"
+    ],
+    "locations": [
+      "Recife",
+      "João Pessoa",
+      "Maceió"
+    ],
+    "max_items_per_location": 40,
+    "language": "pt-BR",
+    "country_code": "BR",
+    "mode": "aggressive",
+    "max_total_charge_usd": 0.30
+  },
+  "send": {
+    "country_code_default": "55",
+    "pause_min_seconds": 30,
+    "pause_max_seconds": 90,
+    "max_messages_per_run": 0,
+    "skip_already_sent": true
+  },
+  "messages": [
+    "Ola {nome}! Tudo bem? Sou Fundador da Gestão Narvalha & Agendamento e queria conversar rapidinho sobre uma oportunidade pro seu negocio.",
+    "Oi {nome}, bom dia! Trabalho com O sistema de Agendamentos e acho que pode fazer sentido pra voces. Posso te mandar mais info?",
+    "Ola! Vi o {nome} aqui e quis chamar. Tenho uma proposta que pode interessar — podemos conversar?"
+  ]
+}

@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Overview · envioEVO{% endblock %}
+{% block content %}
+
+<h1 class="text-2xl font-bold mb-4">Overview</h1>
+
+<div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+  <div class="bg-white rounded-lg p-4 shadow-sm border">
+    <div class="text-xs text-slate-500 uppercase">Total</div>
+    <div class="text-2xl font-bold">{{ totals.total }}</div>
+  </div>
+  <div class="bg-white rounded-lg p-4 shadow-sm border">
+    <div class="text-xs text-slate-500 uppercase">Pendentes</div>
+    <div class="text-2xl font-bold text-amber-600">{{ totals.pending }}</div>
+  </div>
+  <div class="bg-white rounded-lg p-4 shadow-sm border">
+    <div class="text-xs text-slate-500 uppercase">Enviados</div>
+    <div class="text-2xl font-bold text-emerald-600">{{ totals.sent }}</div>
+  </div>
+  <div class="bg-white rounded-lg p-4 shadow-sm border">
+    <div class="text-xs text-slate-500 uppercase">Falhas</div>
+    <div class="text-2xl font-bold text-rose-600">{{ totals.failed }}</div>
+  </div>
+  <div class="bg-white rounded-lg p-4 shadow-sm border">
+    <div class="text-xs text-slate-500 uppercase">Dry-run</div>
+    <div class="text-2xl font-bold text-sky-600">{{ totals.dry_run }}</div>
+  </div>
+  <div class="bg-white rounded-lg p-4 shadow-sm border">
+    <div class="text-xs text-slate-500 uppercase">Blacklist</div>
+    <div class="text-2xl font-bold text-slate-600">{{ totals.blacklist }}</div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="bg-white rounded-lg p-4 shadow-sm border">
+    <h2 class="font-semibold mb-2">🛰️ Apify</h2>
+    {% if apify.ok %}
+      <div class="text-sm space-y-1">
+        <div>Limite mensal: <span class="font-mono">${{ "%.2f"|format(apify.limit_usd) }}</span></div>
+        <div>Usado: <span class="font-mono">${{ "%.2f"|format(apify.used_usd) }}</span></div>
+        <div>Restante: <span class="font-mono font-bold {% if apify.remaining_usd < 0.5 %}text-rose-600{% else %}text-emerald-600{% endif %}">${{ "%.2f"|format(apify.remaining_usd) }}</span></div>
+        {% if apify.cycle_end %}<div class="text-xs text-slate-400">Ciclo termina: {{ apify.cycle_end[:10] }}</div>{% endif %}
+        <div class="mt-2 bg-slate-100 rounded h-2 overflow-hidden">
+          <div class="bg-emerald-500 h-full" style="width: {{ (apify.used_usd / apify.limit_usd * 100) if apify.limit_usd else 0 }}%"></div>
+        </div>
+      </div>
+    {% else %}
+      <div class="text-sm text-rose-600">⚠️ {{ apify.error }}</div>
+    {% endif %}
+  </div>
+
+  <div class="bg-white rounded-lg p-4 shadow-sm border">
+    <h2 class="font-semibold mb-2">📱 Evolution API</h2>
+    {% if evo.ok %}
+      <div class="text-sm space-y-1">
+        <div>Instance: <span class="font-mono">{{ evo.instance }}</span></div>
+        <div>Estado:
+          {% if evo.state == "open" %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">CONECTADO</span>
+          {% elif evo.state == "connecting" %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">conectando</span>
+          {% else %}
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-rose-100 text-rose-800">{{ evo.state | upper }}</span>
+          {% endif %}
+        </div>
+        {% if evo.state != "open" %}
+          <div class="text-xs text-amber-700 mt-2">Escaneie o QR no manager do Evolution antes de enviar.</div>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="text-sm text-rose-600">⚠️ {{ evo.error }}</div>
+    {% endif %}
+  </div>
+</div>
+
+{% if config %}
+<div class="bg-white rounded-lg p-4 shadow-sm border mb-6">
+  <h2 class="font-semibold mb-2">⚙️ config.json</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+    <div>
+      <div class="text-xs text-slate-500">Termos de busca</div>
+      <div class="font-mono text-xs">{{ config.search_terms | join(", ") }}</div>
+    </div>
+    <div>
+      <div class="text-xs text-slate-500">Localizações</div>
+      <div class="font-mono text-xs">{{ config.locations | join(", ") }}</div>
+    </div>
+    <div>
+      <div class="text-xs text-slate-500">Max places/cidade</div>
+      <div class="font-mono">{{ config.max_items_per_location }}</div>
+    </div>
+    <div>
+      <div class="text-xs text-slate-500">Cap de gasto</div>
+      <div class="font-mono">${{ config.max_total_charge_usd }}</div>
+    </div>
+    <div>
+      <div class="text-xs text-slate-500">Pausa envio</div>
+      <div class="font-mono">{{ config.pause_min }}–{{ config.pause_max }}s</div>
+    </div>
+    <div>
+      <div class="text-xs text-slate-500">Variantes msg</div>
+      <div class="font-mono">{{ config.variants }}</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="bg-white rounded-lg p-4 shadow-sm border mb-6">
+  <h2 class="font-semibold mb-3">⚡ Ações</h2>
+  {% if job and job.running %}
+    <div class="bg-amber-50 border border-amber-200 rounded p-3 mb-3">
+      <div class="font-mono text-sm">🔄 Rodando: <span class="font-bold">{{ job.cmd }}</span> (pid {{ job.pid }}, iniciado {{ job.started_at }})</div>
+      {% if job.log_tail %}
+        <pre class="text-xs mt-2 bg-slate-900 text-slate-100 p-2 rounded overflow-x-auto max-h-48">{{ job.log_tail }}</pre>
+      {% endif %}
+      <a href="" class="text-xs text-sky-600 hover:underline">Atualizar</a>
+    </div>
+  {% elif job %}
+    <div class="bg-slate-50 border border-slate-200 rounded p-3 mb-3 text-sm">
+      ✅ Último job: <span class="font-mono">{{ job.cmd }}</span> finalizado.
+      {% if job.log_tail %}
+        <pre class="text-xs mt-2 bg-slate-900 text-slate-100 p-2 rounded overflow-x-auto max-h-48">{{ job.log_tail }}</pre>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <form method="POST" action="{{ url_for('action_scrape') }}" onsubmit="return confirm('Rodar scrape do Apify? Vai consumir saldo.')">
+      <input type="hidden" name="confirm" value="yes">
+      <select name="config" class="w-full px-2 py-1.5 border rounded text-sm">
+        <option value="config.json">config.json (produção)</option>
+        <option value="config.test.json">config.test.json (teste)</option>
+      </select>
+      <button class="mt-2 w-full bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded text-sm font-medium">
+        🛰️ Rodar SCRAPE
+      </button>
+    </form>
+
+    <form method="POST" action="{{ url_for('action_send') }}" onsubmit="return confirm('DRY-RUN — simular envio sem mandar nada?')">
+      <input type="hidden" name="confirm" value="yes">
+      <input type="hidden" name="dry_run" value="1">
+      <select name="config" class="w-full px-2 py-1.5 border rounded text-sm">
+        <option value="config.json">config.json (produção)</option>
+        <option value="config.test.json">config.test.json (teste)</option>
+      </select>
+      <button class="mt-2 w-full bg-slate-600 hover:bg-slate-700 text-white px-3 py-2 rounded text-sm font-medium">
+        🧪 Rodar SEND (dry-run)
+      </button>
+    </form>
+
+    <form method="POST" action="{{ url_for('action_send') }}" onsubmit="return confirm('⚠️ ENVIO REAL via WhatsApp! Tem certeza?')">
+      <input type="hidden" name="confirm" value="yes">
+      <select name="config" class="w-full px-2 py-1.5 border rounded text-sm">
+        <option value="config.json">config.json (produção)</option>
+        <option value="config.test.json">config.test.json (teste)</option>
+      </select>
+      <button class="mt-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-sm font-medium">
+        📤 Rodar SEND (REAL)
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

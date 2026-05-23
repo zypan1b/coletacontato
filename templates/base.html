@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}envioEVO Dash{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .badge { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <nav class="bg-slate-900 text-slate-100 shadow">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-6">
+      <a href="{{ url_for('index') }}" class="font-bold text-lg tracking-tight">
+        envio<span class="text-emerald-400">EVO</span>
+      </a>
+      <div class="flex gap-4 text-sm">
+        <a href="{{ url_for('index') }}" class="hover:text-emerald-300">Overview</a>
+        <a href="{{ url_for('leads_page') }}" class="hover:text-emerald-300">Leads</a>
+        <a href="{{ url_for('sent_page') }}" class="hover:text-emerald-300">Envios</a>
+      </div>
+      <div class="ml-auto text-xs text-slate-400">{{ now }}</div>
+    </div>
+  </nav>
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="text-center text-xs text-slate-400 py-6">
+    envioEVO dash &middot; localhost
+  </footer>
+</body>
+</html>
